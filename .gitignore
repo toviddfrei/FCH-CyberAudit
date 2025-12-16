@@ -1,0 +1,42 @@
+# =========================================================================
+# Python
+# =========================================================================
+
+# Entornos Virtuales
+# Ignora el directorio estándar del entorno virtual de Python
+.venv/
+venv/
+env/
+/venv/
+/env/
+
+# Directorios de caché y build
+__pycache__/
+*.pyc
+*.pyd
+*.so
+build/
+dist/
+
+# Archivos de la herramienta PyInstaller (si se usa para empaquetar)
+*.spec
+
+# =========================================================================
+# IDEs y Editores (VS Code, etc.)
+# =========================================================================
+
+# VS Code
+.vscode/
+
+# Historial de comandos
+.python_history
+
+# =========================================================================
+# Generado por la Auditoría (¡CRÍTICO!)
+# =========================================================================
+
+# Archivos CSV generados por el script fch.py (para evitar subir informes locales)
+*.csv
+
+# Archivos de registro (logs, si se añaden más tarde)
+*.log
