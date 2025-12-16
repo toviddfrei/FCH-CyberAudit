@@ -4,13 +4,13 @@ from datetime import datetime
 import sys
 import subprocess
 from collections import Counter
+import pathlib
 
-# =========================================================================
-# === CONFIGURACIÓN CLAVE: ¡ACTUALIZA ESTA RUTA! ===
-# La ruta debe apuntar al script shell 'limpieza_fuse.sh' o 'fuse_clean.sh'
-# =========================================================================
-RUTA_LIMPIEZA_SHELL = "/home/toviddfrei/BAppC/fuse_clean.sh" # Usando el nombre de tu output
-# =========================================================================
+# Define la ruta del script actual (fch.py)
+BASE_DIR = pathlib.Path(__file__).parent
+
+# La ruta al wrapper se construye de forma dinámica
+RUTA_LIMPIEZA_SHELL = str(BASE_DIR / "fuse_clean.sh")
 
 # Lista global para almacenar los ficheros que root no pudo acceder
 ficheros_no_controlables = []
