@@ -1,0 +1,70 @@
+=================================================================================================================
+       SISTEMA DE CONTROL TOTAL DE ARCHIVOS (fch_v0_1)
+       GUÍA INTEGRAL: DOCUMENTACIÓN TÉCNICA, DE SEGURIDAD Y FAQ
+=================================================================================================================
+
+1. FILOSOFÍA Y OBJETIVO DEL SISTEMA
+-----------------------------------
+Este sistema nace para verificar el "Control Total" del administrador (ROOT) sobre el Host. 
+En Linux, root es el superusuario que debe tener acceso a todo. Si el script detecta rutas 
+inaccesibles, las cataloga como "zonas ciegas" o anomalías de control. 
+Estas pueden originarse por:
+   - Errores técnicos o de configuración.
+   - Fallos físicos de hardware (I/O).
+   - Técnicas de ocultación o persistencia de software no autorizado.
+
+2. ARQUITECTURA TÉCNICA (El Maletín de Herramientas)
+----------------------------------------------------
+Para garantizar la máxima compatibilidad y transparencia, solo se utilizan librerías estándar:
+- os / pathlib: Para navegar y localizar archivos sin perderse.
+- subprocess: El enlace para ejecutar el saneamiento externo (fuse_clean.sh).
+- csv / datetime: Para crear un acta forense con fecha y hora precisa.
+- Counter: Para resumir estadísticamente el estado de salud del sistema.
+
+3. PROTOCOLO DE INTERVENCIÓN: LIMPIEZA DE RUIDO (FUSE/GVFS)
+----------------------------------------------------------
+¿Por qué limpiar antes de auditar?
+Los sistemas modernos proyectan "carpetas virtuales" (FUSE/GVFS) para conectar móviles o redes. 
+No son archivos reales. Si no se desmontan:
+   - El informe se contamina con "falsos positivos" (ruido de auditoría).
+   - El script pierde eficiencia intentando entrar en rutas temporales.
+
+Seguridad del Saneamiento:
+El script 'fuse_clean.sh' es SEGURO. No borra datos, solo desconecta montajes virtuales. 
+Al reiniciar la sesión, todo vuelve a la normalidad. Se ejecuta mediante 'su -' para 
+actuar bajo la identidad del usuario original, no del administrador.
+
+
+
+4. MATRIZ DE CLASIFICACIÓN Y JERARQUÍA DE RIESGOS
+-------------------------------------------------
+El sistema utiliza una lógica de semáforo para priorizar las acciones del auditor:
+
+🔴 CRÍTICO: Fallos de Entrada/Salida (I/O). 
+   - Significado: Riesgo físico en el disco o corrupción de integridad grave.
+   - Acción: Verificar hardware (fsck) y backups inmediatamente.
+
+🟠 ALTO: Bloqueos en archivos clave (Shadow, Sudoers, configuraciones de Root).
+   - Significado: Indicio de manipulación o fallo de seguridad crítica.
+   - Acción: Restaurar propiedad y permisos de forma urgente.
+
+🟡 MEDIO: Permisos genéricos, ACLs mal configuradas o enlaces simbólicos rotos.
+   - Significado: Desorden administrativo que puede facilitar ataques laterales.
+   - Acción: Limpieza y reconfiguración de permisos estándar.
+
+🔵 BAJO: Errores en rutas virtuales (/proc, /sys).
+   - Significado: Ruido normal del kernel. Archivos que aparecen y desaparecen.
+   - Acción: Ignorar, es parte del funcionamiento esperado del sistema operativo.
+
+
+
+5. EL REPORTE FORENSE (CSV)
+---------------------------
+Al finalizar, obtendrás el archivo 'auditoria_control_clasificada.csv'. 
+Este documento es tu prueba de cumplimiento y control. 
+- Columna 'Conclusión': El diagnóstico pedagógico del script.
+- Columna 'Solución': El primer paso técnico recomendado para mitigar el riesgo.
+
+RECOMENDACIÓN: Guarde este reporte periódicamente para mantener un histórico de la 
+integridad de su sistema de archivos.
+=================================================================================================================
