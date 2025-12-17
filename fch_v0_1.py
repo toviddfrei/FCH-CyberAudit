@@ -298,9 +298,29 @@ def auditar_control_root_clasificado(directorio_raiz):
     generar_resumen_final(contador_total)
 
 # =================================================================================================================
+# SECCIÓN DE MEJORAS ADICIONALES (PROTECCIÓN DINÁMICA)
+# =================================================================================================================
+
+def sugerir_proteccion_dinamica():
+    print("\n" + "="*60)
+    print("🛡️  MEJORA DE SEGURIDAD DISPONIBLE")
+    print("="*60)
+    print("Se ha detectado el módulo de monitoreo dinámico 'fch_dynamic_v0_1.py'.")
+    print("Este módulo permite vigilar procesos en RAM contra inyecciones de código.")
+    
+    opcion = input("\n¿Desea iniciar la vigilancia de memoria ahora? (s/n): ").lower()
+    if opcion == 's':
+        # Llamamos al nuevo módulo como un proceso independiente
+        import subprocess
+        subprocess.Popen(['sudo', 'python3', 'fch_dynamic_v0_1.py'])
+        print("🚀 Monitor dinámico lanzado en segundo plano. Revise los logs de seguridad.")
+
+# =================================================================================================================
 # PUNTO DE ENTRADA PRINCIPAL
 # =================================================================================================================
 
 if __name__ == "__main__":
     # Iniciamos el proceso oficial de auditoría desde la raíz del Host
     auditar_control_root_clasificado("/")
+    # Sugerimos el nuevo módulo tras finalizar la auditoría estática
+    sugerir_proteccion_dinamica()
