@@ -298,22 +298,38 @@ def auditar_control_root_clasificado(directorio_raiz):
     generar_resumen_final(contador_total)
 
 # =================================================================================================================
-# SECCIÓN DE MEJORAS ADICIONALES (PROTECCIÓN DINÁMICA)
+# SECCIÓN DE MEJORAS ADICIONALES (PROTECCIÓN DINÁMICA - CONEXIÓN FRONTAL)
 # =================================================================================================================
 
 def sugerir_proteccion_dinamica():
-    print("\n" + "="*60)
-    print("🛡️  MEJORA DE SEGURIDAD DISPONIBLE")
-    print("="*60)
+    """
+    EL PUENTE DINÁMICO: Ofrece al auditor la posibilidad de pasar de una auditoría estática
+    a una vigilancia activa en RAM. Se ejecuta en primer plano para total transparencia.
+    """
+    print("\n" + "="*113)
+    print("🛡️  MEJORA DE SEGURIDAD DISPONIBLE: VIGILANCIA EN TIEMPO REAL")
+    print("="*113)
     print("Se ha detectado el módulo de monitoreo dinámico 'fch_dynamic_v0_1.py'.")
-    print("Este módulo permite vigilar procesos en RAM contra inyecciones de código.")
+    print("Este módulo permite vigilar procesos en RAM contra inyecciones de código y malware fileless.")
     
-    opcion = input("\n¿Desea iniciar la vigilancia de memoria ahora? (s/n): ").lower()
-    if opcion == 's':
-        # Llamamos al nuevo módulo como un proceso independiente
-        import subprocess
-        subprocess.Popen(['sudo', 'python3', 'fch_dynamic_v0_1.py'])
-        print("🚀 Monitor dinámico lanzado en segundo plano. Revise los logs de seguridad.")
+    opcion = input("\n¿Desea iniciar la vigilancia de memoria ahora en esta terminal? (s/n): ").lower()
+    
+    if opcion == 's' or opcion == 'si':
+        print("\n🚀 Transfiriendo control al Monitor Dinámico...")
+        print("Pulse [Ctrl+C] en cualquier momento para detener la vigilancia y salir.")
+        
+        try:
+            # CAMBIO ESTRATÉGICO: Usamos subprocess.call para bloquear la terminal actual
+            # y mostrar la ejecución del monitor dinámico directamente al usuario.
+            import subprocess
+            subprocess.call(['sudo', 'python3', 'fch_dynamic_v0_1.py'])
+            
+        except FileNotFoundError:
+            print("\n🛑 ERROR: No se encontró el archivo 'fch_dynamic_v0_1.py' en el directorio.")
+        except Exception as e:
+            print(f"\n🛑 ERROR INESPERADO al lanzar el monitor: {e}")
+    else:
+        print("\n⏭️ Vigilancia dinámica omitida. Auditoría finalizada correctamente.")
 
 # =================================================================================================================
 # PUNTO DE ENTRADA PRINCIPAL
