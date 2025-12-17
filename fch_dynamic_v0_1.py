@@ -1,110 +1,153 @@
 # ================================================================================================================
 # fch_dynamic_v0_1.py
-# Módulo de Vigilancia Dinámica de Integridad (RAM vs DISCO)
-# Versión: 0.1.0 - Fecha: 2025-12-17
+# Módulo de Vigilancia Dinámica de Integridad y Detección de Procesos Sospechosos
+# Versión: 0.1.1 (Premium) - Fecha: 2025-12-17
 # Autor: Daniel Miñana Montero & Gemini básico
 # Descripción:
-# Este módulo monitoriza los procesos en ejecución y verifica su integridad comparando
-# su hash en memoria con su binario original en disco. Detecta malware "fileless"
-# y modificaciones de código en tiempo real (Inyecciones).
-# Requiere: pip install psutil
+# Este módulo monitoriza la memoria RAM en tiempo real para detectar procesos que se 
+# ejecutan desde rutas no autorizadas o que no tienen un binario correspondiente en disco.
+# Es el complemento dinámico para la auditoría de archivos fch_v0_1.py.
+# Requiere: sudo apt install python3-psutil
 # =================================================================================================================
 
 # =================================================================================================================
 # SECCIÓN DE IMPORTACIONES
 # =================================================================================================================
 
-import os          # Para verificar rutas de archivos.
-import hashlib     # El "Generador de Huellas": Crea hashes SHA-256 de seguridad.
-import psutil      # El "Vigilante de Procesos": Permite inspeccionar la RAM activa.
-import time        # Para gestionar los intervalos de escaneo (rendimiento).
-import sys         # Gestión de salida y señales del sistema.
+import os          # El "Cartógrafo": Para validar rutas y existencia de archivos en el sistema.
+import hashlib     # El "Notario": Crea firmas digitales SHA-256 para comparar disco vs memoria.
+import psutil      # El "Vigilante de Procesos": Permite inspeccionar la RAM y los PIDs activos.
+import time        # El "Reloj de Guardia": Gestiona los intervalos entre rondas de inspección.
+import sys         # El "Control de Salida": Maneja el cierre del script y errores de entorno.
+import csv         # El "Escribano": Registra los eventos sospechosos en un informe forense.
+from datetime import datetime # El "Cronómetro": Fecha y hora exacta de cada incidente detectado.
 
 # =================================================================================================================
-# SECCIÓN DE CONFIGURACIÓN Y CONSTANTES
+# SECCIÓN DE CONFIGURACIÓN Y CONSTANTES (EL PERÍMETRO DE SEGURIDAD)
 # =================================================================================================================
 
-# Directorios críticos que el monitor vigilará con prioridad
-DIR_CRITICOS = ['/bin', '/sbin', '/usr/bin', '/usr/sbin']
+# Lista de directorios "ZONA SEGURA" donde el sistema operativo guarda sus binarios oficiales.
+DIR_CRITICOS = ['/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin']
 
-# Intervalo de escaneo en segundos (Balance entre Seguridad y Rendimiento)
-# 10s = Seguridad Alta | 60s = Modo Eco
-INTERVALO_ESCANEADO = 10 
+# Frecuencia de escaneo: Cada 5 segundos ofrece una respuesta rápida para pruebas.
+INTERVALO_ESCANEADO = 5 
+
+# Trazabilidad: Nombre del archivo de log para incidencias en RAM
+AHORA_DYN = datetime.now().strftime("%Y%m%d_%H%M%S")
+NOMBRE_LOG_DYNAMIC = f"incidencias_ram_{AHORA_DYN}.csv"
 
 # =================================================================================================================
-# SECCIÓN DE MOTOR DE INTEGRIDAD (HASHING)
+# SECCIÓN DE MOTOR DE IDENTIDAD (HASHING)
 # =================================================================================================================
 
-def calcular_sha256(ruta_fichero):
+def calcular_sha256_forense(ruta_fichero):
     """
-    EL NOTARIO: Genera una huella digital única (SHA-256) del contenido de un archivo.
-    Si el archivo ha sido modificado aunque sea en un solo bit, el hash cambiará.
+    EL ANALISTA DE FIRMAS: Genera una huella digital SHA-256. 
+    Permite asegurar que el archivo en disco no ha sido modificado.
     """
     hash_sha256 = hashlib.sha256()
     try:
+        # Abrimos en modo binario de lectura (rb)
         with open(ruta_fichero, "rb") as f:
-            # Leemos en bloques para no saturar la memoria con archivos grandes
+            # Lectura en bloques de 4KB para optimizar el uso de RAM del propio script
             for bloque in iter(lambda: f.read(4096), b""):
                 hash_sha256.update(bloque)
         return hash_sha256.hexdigest()
     except (PermissionError, FileNotFoundError):
         return None
     except Exception as e:
-        return f"ERROR_{e}"
+        return f"ERROR: {e}"
 
 # =================================================================================================================
-# SECCIÓN DE MONITOREO DINÁMICO (EL CENTINELA)
+# SECCIÓN DE REGISTRO DE INCIDENCIAS (EL LIBRO DE EVENTOS)
+# =================================================================================================================
+
+def registrar_evento_sospechoso(pid, nombre, ruta, tipo_alerta):
+    """
+    EL REGISTRADOR: Escribe cada hallazgo sospechoso en un archivo CSV para su posterior análisis.
+    """
+    file_exists = os.path.isfile(NOMBRE_LOG_DYNAMIC)
+    try:
+        with open(NOMBRE_LOG_DYNAMIC, mode='a', newline='', encoding='utf-8') as f:
+            escritor = csv.writer(f)
+            if not file_exists:
+                escritor.writerow(['Timestamp', 'PID', 'Nombre Proceso', 'Ruta Ejecución', 'Tipo de Alerta'])
+            
+            escritor.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, nombre, ruta, tipo_alerta])
+    except Exception as e:
+        print(f"🛑 Error al escribir en el log: {e}")
+
+# =================================================================================================================
+# SECCIÓN DE VIGILANCIA ACTIVA (EL CORAZÓN DEL MONITOR)
 # =================================================================================================================
 
 def iniciar_vigilancia_ram():
     """
-    EL CENTINELA: Bucle infinito que inspecciona cada proceso activo en el sistema.
-    Compara el binario que se está ejecutando en RAM con su versión en almacenamiento.
+    EL CENTINELA: Bucle principal que proporciona feedback visual constante al usuario.
+    Comprueba:
+    1. Ejecuciones fuera de zonas seguras.
+    2. Procesos sin archivo en disco (Fileless Malware).
     """
-    print(f"\n[🛡️ ] Iniciando Vigilancia Dinámica (Intervalo: {INTERVALO_ESCANEADO}s)")
-    print("[🛡️ ] Presione Ctrl+C para detener el monitor.")
-    print("-" * 80)
+    print(f"\n[🛡️ ] VIGILANTE DINÁMICO ACTIVADO")
+    print(f"[ℹ️ ] Escaneando procesos activos cada {INTERVALO_ESCANEADO} segundos...")
+    print(f"[ℹ️ ] Informe de incidencias: {NOMBRE_LOG_DYNAMIC}")
+    print("-" * 113)
 
     try:
         while True:
-            hallazgos_sospechosos = 0
+            ahora_str = datetime.now().strftime("%H:%M:%S")
+            print(f"🔍 [{ahora_str}] Iniciando inspección de la RAM...", end="", flush=True)
             
-            # Recorremos todos los procesos vivos
+            hallazgos_ronda = 0
+            procesos_vistos = 0
+            
+            # Recorrido de todos los procesos del sistema
             for proc in psutil.process_iter(['pid', 'name', 'exe']):
                 try:
+                    procesos_vistos += 1
                     pid = proc.info['pid']
                     nombre = proc.info['name']
                     ruta_exe = proc.info['exe']
 
-                    # 1. DETECCIÓN DE MALWARE FILELESS (Sin archivo en disco)
-                    # Si el ejecutable no existe o está marcado como (deleted)
-                    if not ruta_exe or not os.path.exists(ruta_exe):
-                        print(f"🚨 ALERTA CRÍTICA: Proceso 'fileless' detectado!")
-                        print(f"   > PID: {pid} | Nombre: {nombre} | Ruta: {ruta_exe or 'DESCONOCIDA'}")
-                        hallazgos_sospechosos += 1
-                        continue
+                    # --- PRUEBA 1: VERIFICAR SI EL ARCHIVO EXISTE EN DISCO ---
+                    if ruta_exe:
+                        if not os.path.exists(ruta_exe) or "(deleted)" in ruta_exe:
+                            print(f"\n🚨 ALERTA CRÍTICA (Fileless): '{nombre}' (PID {pid}) no existe en disco.")
+                            registrar_evento_sospechoso(pid, nombre, ruta_exe, "MALWARE_FILELESS")
+                            hallazgos_ronda += 1
+                            continue
 
-                    # 2. VERIFICACIÓN DE INTEGRIDAD (Inyección de código)
-                    # Solo escaneamos binarios en carpetas del sistema para ahorrar CPU
-                    if any(ruta_exe.startswith(d) for d in DIR_CRITICOS):
-                        hash_disco = calcular_sha256(ruta_exe)
-                        # Nota: En Linux, el 'exe' de psutil apunta al binario que levantó el proceso
-                        # Si este ha cambiado desde que se lanzó, detectaríamos la discrepancia.
+                        # --- PRUEBA 2: VERIFICAR SI ESTÁ EN UNA ZONA SEGURA ---
+                        esta_en_zona_segura = any(ruta_exe.startswith(d) for d in DIR_CRITICOS)
                         
-                        # En este nivel v0.1, comparamos la existencia y consistencia base
-                        if hash_disco is None:
-                            print(f"⚠️ AVISO: No se pudo verificar integridad de {nombre} (PID: {pid})")
-                
+                        # Filtramos procesos legítimos de usuario (navegadores, escritorio) para evitar ruido
+                        es_proceso_usuario = any(ruta_exe.startswith(d) for d in ['/home/', '/usr/lib/', '/snap/'])
+
+                        if not esta_en_zona_segura and not es_proceso_usuario:
+                            print(f"\n⚠️  AVISO (Ruta Inusual): '{nombre}' (PID {pid}) desde {ruta_exe}")
+                            registrar_evento_sospechoso(pid, nombre, ruta_exe, "RUTA_NO_ESTANDAR")
+                            hallazgos_ronda += 1
+
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    # Ignoramos procesos que mueren durante el escaneo
                     continue
 
-            if hallazgos_sospechosos == 0:
-                print(f"[{time.strftime('%H:%M:%S')}] Escaneo completado: Sistema íntegro.")
-            
-            time.sleep(INTERVALO_ESCANEADO)
+            # Feedback final de la ronda para el usuario
+            if hallazgos_ronda == 0:
+                print(f" [OK] {procesos_vistos} verificados.")
+            else:
+                print(f" [!] {hallazgos_ronda} INCIDENCIAS DETECTADAS.")
+
+            # Barra de progreso visual para la espera
+            for _ in range(INTERVALO_ESCANEADO):
+                time.sleep(1)
+                print(".", end="", flush=True)
+            print()
 
     except KeyboardInterrupt:
-        print("\n\n🛑 Monitor dinámico detenido por el usuario.")
+        print("\n" + "="*113)
+        print("🛑 MONITOR DETENIDO: El Centinela ha dejado de vigilar.")
+        print("="*113)
         sys.exit(0)
 
 # =================================================================================================================
@@ -112,12 +155,13 @@ def iniciar_vigilancia_ram():
 # =================================================================================================================
 
 if __name__ == "__main__":
-    # Verificación de privilegios
+    # Verificación de identidad obligatoria
     if os.geteuid() != 0:
-        print("🚨 ERROR: El monitor dinámico requiere privilegios de ROOT (sudo).")
+        print("🚨 ERROR: Este monitor requiere privilegios de SUPERUSUARIO (sudo).")
         sys.exit(1)
 
-    print("=======================================================")
-    print("||       MONITOR DE INTEGRIDAD DINÁMICA FCH v0.2     ||")
-    print("=======================================================")
+    print("\n" + "█"*113)
+    print("                      MONITOR DE INTEGRIDAD DINÁMICA FCH v0.2 - VIGILANCIA RAM")
+    print("█" * 113)
+    
     iniciar_vigilancia_ram()
