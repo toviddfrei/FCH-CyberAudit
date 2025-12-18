@@ -1,0 +1,16 @@
+{
+  "sistemas": {
+    "debian_ubuntu": {
+      "descripcion": "Basado en Debian/Ubuntu (Gestor: dpkg)",
+      "procesos_standard": {
+        "bluetoothd": "Gestor de protocolos Bluetooth. Permite conectar ratones, teclados y audio inalámbrico.",
+        "udisksd": "Servicio de almacenamiento. Gestiona el montaje y desmontaje de discos duros y USBs.",
+        "upowerd": "Gestor de energía. Monitoriza el estado de la batería y el consumo del sistema.",
+        "rtkit-daemon": "Realtime Kit. Evita que el audio se corte dando prioridad al procesador de sonido.",
+        "colord": "Gestor de perfiles de color para impresoras y monitores.",
+        "accounts-daemon": "Servicio que gestiona la información de los usuarios del sistema (nombres, fotos, etc).",
+        "gsd-color": "Componente de GNOME que aplica ajustes de color según el monitor."
+      }
+    }
+  }
+}
