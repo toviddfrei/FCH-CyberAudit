@@ -1,71 +1,71 @@
-# Linux Root Control Audit (FCH) - v0.1.1 Premium
+# **Linux Security & Integrity Suite (FCH) - v0.2.8 Premium**
 
-Este proyecto ofrece una herramienta de auditoría de ciberseguridad diseñada para verificar el CONTROL TOTAL del usuario root sobre el sistema de archivos de Linux. Su principal objetivo es identificar "zonas ciegas" y depurar el informe final eliminando el ruido generado por sistemas de archivos virtuales (FUSE/GVFS).
+## **🛡️ Propósito del Proyecto**
 
-## Propósito y Valor Añadido
+**FCH (Filesystem & Control Health)** es una suite de herramientas de ciberseguridad diseñada para el control total de la integridad en sistemas Linux. Ha evolucionado de una auditoría estática de archivos a un sistema híbrido que combina el análisis de disco con la **Vigilancia Inteligente de RAM**.
 
-A diferencia de los escáneres recursivos genéricos, el script fch_v0_1.py está diseñado bajo un enfoque de SEGURIDAD PROACTIVA, ofreciendo:
+Esta suite ayuda a los administradores a identificar "zonas ciegas" y detectar malware persistente o volátil mediante la verificación cruzada de firmas oficiales del sistema.
 
-1. Saneamiento de Entorno: Ejecuta el wrapper fuse_clean_v0_1.sh mediante "su -" para desmontar sistemas virtuales antes de la auditoría.
-2. Clasificación de Riesgos: Clasifica cada fallo detectado como BAJO, MEDIO, ALTO o CRÍTICO (errores de E/S de hardware).
-3. Protocolo Ético: Incluye una fase de Consentimiento Informado obligatorio antes de cualquier acción.
-4. Trazabilidad Forense: Generación de informes con nombres dinámicos basados en marca de tiempo (YYYYMMDD_HHMMSS) para evitar la sobrescritura.
-5. Privacidad del Informe: Protección automática de resultados mediante permisos "chmod 600" (lectura exclusiva para root).
+## **🚀 Valor Añadido de la Suite**
 
-## Requisitos del Sistema
+A diferencia de los escáneres genéricos, la FCH Suite ofrece un enfoque de **Seguridad Pedagógica**:
 
-* Sistema Operativo: Linux (basado en Debian, Ubuntu, RHEL o similares).
-* Intérprete: Python 3.x.
-* Privilegios: Acceso a sudo.
-* Comandos necesarios: sudo, su, fusermount.
+1. **Auditoría Estática Clasificada (v0.1.2):** Escaneo profundo de permisos con clasificación de riesgos (BAJO a CRÍTICO) y saneamiento automático de puntos virtuales (FUSE/GVFS).  
+2. **Monitor Dinámico de RAM (v0.2.8):** Vigilancia de procesos en tiempo real con detección de inyecciones y ejecución sin binarios en disco.  
+3. **Motor de Integridad Oficial:** Auditoría automática de hashes contra la base de datos del gestor de paquetes (dpkg) para confirmar la legitimidad de los binarios.  
+4. **Auto-Aprendizaje Pedagógico:** Uso de una base de conocimiento en formato **JSON** que el sistema alimenta automáticamente tras verificar procesos seguros, explicando al usuario qué hace cada proceso.  
+5. **Trazabilidad Forense:** Informes protegidos con chmod 600 y logs detallados en CSV con marcas de tiempo.
 
-## Guía de Uso
+## **📁 Estructura del Proyecto**
 
-Para garantizar la portabilidad, MANTENGA fch_v0_1.py y fuse_clean_v0_1.sh en el mismo directorio.
+* fch_v0_1.py: **Módulo Suite Principal**. Orquestador de la auditoría de archivos y lanzador del monitor RAM.  
+* fch_dynamic_v0_2.py: **Monitor Dinámico de Procesos**. El "cerebro" que vigila la RAM y verifica hashes oficiales.  
+* base_conocimiento.json: **Base de Inteligencia**. Almacena la pedagogía y procesos de confianza (se genera automáticamente).  
+* fuse_clean_v0_1.sh: **Script de Saneamiento**. Limpia montajes virtuales para eliminar ruido en los informes.
 
-### 1. Preparación del Entorno
+## **🛠️ Requisitos e Instalación**
 
-Otorgue permisos de ejecución al script de limpieza:
+* **SO:** Linux (Debian, Ubuntu, Kali Linux).  
+* **Dependencias:** Python 3.x, python3-psutil.  
+* **Privilegios:** Ejecución obligatoria con sudo.
 
-```bash
-$chmod +x fuse_clean_v0_1.sh
+```Bash
+
+# Clonar y preparar  
+$ git clone https://github.com/tu-usuario/fch-security-suite.git  
+$ cd fch-security-suite  
+$ chmod +x fuse_clean_v0_1.sh
+
 ```
 
-### 2. Ejecución de la Auditoría
+## **📖 Guía de Uso**
 
-Inicie el proceso con privilegios de superusuario:
+### **1. Iniciar la Auditoría Completa**
 
-```bash
-$sudo python3 fch_v0_1.py
+Ejecute el script base para un escaneo total del sistema:
+
+```Bash
+
+# Ejecutar
+$ sudo python3 fch_v0_1.py
+
 ```
 
-### 3. Flujo de Trabajo (Workflow)
+### **2. Flujo de Trabajo (Workflow)**
 
-El script guiará al auditor a través de las siguientes fases:
+1. **Consentimiento:** Aceptación de términos legales y de responsabilidad.  
+2. **Saneamiento FUSE:** Limpieza interactiva de puntos de montaje de usuario.  
+3. **Escaneo de Disco:** Clasificación pedagógica de errores de acceso.  
+4. **Veredicto Ejecutivo:** Resumen de salud del sistema de archivos.  
+5. **Vigilancia RAM:** Transición opcional al monitor dinámico con auto-aprendizaje.
 
-1. Identidad: Comprobación de privilegios root.
-2. Consentimiento: Aceptación explícita de la responsabilidad del auditor.
-3. Limpieza: Opción interactiva para desmontar puntos FUSE/GVFS.
-4. Escaneo: Recorrido recursivo y clasificación de incidencias en tiempo real.
-5. Veredicto: Resumen ejecutivo en consola y generación de acta protegida.
+## **📊 Análisis de la Salida (Reports)**
 
-## Análisis de la Salida
+La suite genera informes técnicos detallados:
 
-La herramienta genera un archivo CSV con la siguiente estructura de nombre:
-auditoria_control_YYYYMMDD_HHMMSS.csv
+* auditoria_control_*.csv: Detalla rutas inaccesibles, nivel de riesgo y recomendación de mitigación.  
+* incidencias_ram_*.csv: Registra bloqueos de procesos sospechosos o autorizaciones de usuario.
 
-Estructura del Informe:
+## **👨‍💻 Perfil del Proyecto**
 
-* Ruta Inaccesible: Ubicación exacta del fallo en el sistema.
-* Nivel de Riesgo: Clasificación de severidad (CRÍTICO, ALTO, MEDIO, BAJO).
-* Conclusión: Análisis pedagógico del motivo técnico del fallo.
-* Solución: Recomendación inmediata para mitigar el riesgo.
-
-## Estructura del Proyecto
-
-* fch_v0_1.py: Motor principal de auditoría y lógica de riesgos.
-* fuse_clean_v0_1.sh: Script de soporte para el saneamiento de puntos virtuales.
-* auditoria_control_*.csv: Informes generados (protegidos con permisos restrictivos).
-
---------------------------------------------------------------------------------
-Desarrollado como herramienta educativa de control de integridad en sistemas Linux.
+Desarrollado como una herramienta educativa y profesional para la gestión de integridad. Este proyecto demuestra la capacidad de integrar lógica de bajo nivel de Linux con estructuras de datos dinámicas (JSON) para la toma de decisiones en ciberseguridad.
